@@ -1,7 +1,6 @@
 ﻿using LearnAPI.Modal;
 using LearnAPI.Repos;
 using LearnAPI.Service;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

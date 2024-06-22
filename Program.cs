@@ -5,12 +5,9 @@ using LearnAPI.Modal;
 using LearnAPI.Repos;
 using LearnAPI.Repos.Models;
 using LearnAPI.Service;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
@@ -20,20 +17,27 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure EmailSettings from the configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+// Register service dependencies for DI (Dependency Injection)
 builder.Services.AddTransient<ICustomerService, CustomerService>();
 builder.Services.AddTransient<IRefreshHandler, RefreshHandler>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserRoleServicecs, UserRoleService>();
 builder.Services.AddTransient<IEmailService, EmailService>();
+
+// Configure DbContext with SQL Server
 builder.Services.AddDbContext<LearndataContext>(o =>
 o.UseSqlServer(builder.Configuration.GetConnectionString("apicon")));
 
 //builder.Services.AddAuthentication("BasicAuthentication").AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
 
+
+// JWT Authentication configuration
 var _authkey = builder.Configuration.GetValue<string>("JwtSettings:securitykey");
 builder.Services.AddAuthentication(item =>
 {
@@ -54,9 +58,14 @@ builder.Services.AddAuthentication(item =>
 
 });
 
+
+// AutoMapper configuration
 var automapper = new MapperConfiguration(item => item.AddProfile(new AutoMapperHandler()));
 IMapper mapper = automapper.CreateMapper();
 builder.Services.AddSingleton(mapper);
+
+// Configure CORS policies
+
 builder.Services.AddCors(p => p.AddPolicy("corspolicy", build =>
 {
     build.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
@@ -72,6 +81,8 @@ builder.Services.AddCors(p => p.AddDefaultPolicy(build =>
     build.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
 }));
 
+// Configure Rate Limiting
+
 builder.Services.AddRateLimiter(_ => _.AddFixedWindowLimiter(policyName: "fixedwindow", options =>
 {
     options.Window = TimeSpan.FromSeconds(10);
@@ -79,6 +90,10 @@ builder.Services.AddRateLimiter(_ => _.AddFixedWindowLimiter(policyName: "fixedw
     options.QueueLimit = 0;
     options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
 }).RejectionStatusCode=401);
+
+
+
+// Serilog configuration for logging
 
 string logpath = builder.Configuration.GetSection("Logging:Logpath").Value;
 var _logger = new LoggerConfiguration()
@@ -89,11 +104,15 @@ var _logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Logging.AddSerilog(_logger);
 
+
+// JWT Settings configuration
 var _jwtsetting = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(_jwtsetting);
 
 
 var app = builder.Build();
+
+// Define minimal API endpoints
 
 app.MapGet("/minimalapi", () => "Nihira Techiees");
 
@@ -104,6 +123,7 @@ app.MapGet("/getchannel", (string channelname) => "Welcome to " + channelname).W
     return opt;
 });
 
+// Define API endpoints for customer management
 app.MapGet("/getcustomer",async (LearndataContext db) => {
     return await db.TblCustomers.ToListAsync();
 });
@@ -136,24 +156,34 @@ app.MapDelete("/removecustomer/{code}", async (LearndataContext db, string code)
     await db.SaveChangesAsync();
 });
 
+// Use the rate limiter middleware
 app.UseRateLimiter();
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
+
+// Configure the HTTP request pipeline.
+app.UseSwagger();
     app.UseSwaggerUI();
 //}
 
+// Serve static files
 app.UseStaticFiles();
 
+// Enable CORS
 app.UseCors();
 
+// Redirect HTTP requests to HTTPS
 app.UseHttpsRedirection();
 
+// Enable authentication
 app.UseAuthentication();
 
+// Enable authorization
 app.UseAuthorization();
 
+// Map controller routes
 app.MapControllers();
 
+// Run the application
 app.Run();

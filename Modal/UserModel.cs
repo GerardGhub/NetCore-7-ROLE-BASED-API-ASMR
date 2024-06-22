@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-
-namespace LearnAPI.Modal
+﻿namespace LearnAPI.Modal
 {
     public class UserModel
     {

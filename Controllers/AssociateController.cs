@@ -1,21 +1,26 @@
 ﻿using LearnAPI.Repos;
 using LearnAPI.Repos.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace LearnAPI.Controllers
 {
+    // Route for the API controller, setting the base path as "api/associate"
     [Route("api/[controller]")]
     [ApiController]
     public class AssociateController : ControllerBase
     {
+        // Database context for accessing the data
         private readonly LearndataContext learndata;
+
+        // Constructor to initialize the database context
         public AssociateController(LearndataContext context) { 
             this.learndata = context;
         }
 
+        // GET: api/associate/getall
+        // Method to get all customers using a stored procedure
         [HttpGet("getall")]
         public async Task<ActionResult> Getall()
         {
@@ -29,6 +34,8 @@ namespace LearnAPI.Controllers
 
         }
 
+        // GET: api/associate/Getallcustom
+        // Method to get all custom customers using a stored procedure
         [HttpGet("Getallcustom")]
         public async Task<ActionResult> Getallcustom()
         {
@@ -42,6 +49,9 @@ namespace LearnAPI.Controllers
 
         }
 
+
+        // GET: api/associate/Getallcustomq
+        // Method to get all custom customers with an additional status field
         [HttpGet("Getallcustomq")]
         public async Task<ActionResult> Getallcustomq()
         {
@@ -49,12 +59,16 @@ namespace LearnAPI.Controllers
             var data = await this.learndata.customerdetail.FromSqlRaw(sqlquery).ToListAsync();
             if (data == null)
             {
-                return NotFound();
+                return NotFound();  
             }
             return Ok(data);
 
         }
 
+
+
+        // GET: api/associate/getbycode?code=value
+        // Method to get a customer by code, includes a status field
         [HttpGet("getbycode")]
         public async Task<ActionResult> getbycode(string code)
         {
@@ -69,6 +83,10 @@ namespace LearnAPI.Controllers
 
         }
 
+
+
+        // POST: api/associate/create
+        // Method to create a new customer
         [HttpPost("create")]
         public async Task<ActionResult> create(TblCustomer tblCustomer)
         {
@@ -88,6 +106,9 @@ namespace LearnAPI.Controllers
 
         }
 
+
+        // PUT: api/associate/update
+        // Method to update an existing customer using a stored procedure
         [HttpPut("Update")]
         public async Task<ActionResult> Update(string code,TblCustomer tblCustomer)
         {
@@ -107,6 +128,9 @@ namespace LearnAPI.Controllers
             return Ok(data);
 
         }
+
+        // DELETE: api/associate/delete
+        // Method to delete a customer by code using a stored procedure
 
         [HttpDelete("delete")]
         public async Task<ActionResult> delete(string code)
